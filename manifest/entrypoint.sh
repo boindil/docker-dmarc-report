@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # change according to alpine and php release
-PHP_VERSION=81
+PHP_VERSION=82
 
 # Display PHP error's or not
 if [[ "$ERRORS" != "1" ]] ; then
@@ -21,10 +21,6 @@ sed -i -e "s/worker_processes 5/worker_processes $procs/" /etc/nginx/nginx.conf
 # Copy important env vars for PHP-FPM to access
 PHP_ENV_FILE="/etc/php${PHP_VERSION}/php-fpm.d/${PHP_ENV_FILE:-env.conf}"
 echo '[www]' > "$PHP_ENV_FILE"
-echo 'user = nginx' >> "$PHP_ENV_FILE"
-echo 'group = www-data' >> "$PHP_ENV_FILE"
-echo 'listen.owner = nginx' >> "$PHP_ENV_FILE"
-echo 'listen.group = www-data' >> "$PHP_ENV_FILE"
 env | grep -e 'REPORT_DB_TYPE' -e 'REPORT_DB_HOST' -e 'REPORT_DB_PORT' -e 'REPORT_DB_NAME' -e 'REPORT_DB_USER' -e 'REPORT_DB_PASS' | sed "s/\(.*\)=\(.*\)/env[\1] = '\2'/" >> "$PHP_ENV_FILE"
 
 # compat from older image where variable was not existing
@@ -40,5 +36,8 @@ else
   exit 1
 fi
 
-# Start supervisord and services
-/usr/bin/supervisord -n -c /etc/supervisord.conf
+# this is because of a linux quirk that never got fixed - processes started with 'su' cannot access /dev/std* file descriptors otherwise
+chmod a+w /dev/std*
+
+# Start supervisord and services as 'nobody'
+su -s /bin/sh -c '/usr/bin/supervisord -n -c /etc/supervisord.conf' nobody
