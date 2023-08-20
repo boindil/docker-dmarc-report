@@ -52,8 +52,6 @@ RUN set -x \
   && unzip parser.zip && cp -av dmarcts-report-parser-master/* /usr/bin/ && rm -vf parser.zip && rm -rvf dmarcts-report-parser-master \
   && unzip viewer.zip && cp -av dmarcts-report-viewer-master/* /var/www/viewer/ && rm -vf viewer.zip && rm -rvf dmarcts-report-viewer-master \
   && sed -i "1s/^/body { font-family: Sans-Serif; }\n/" /var/www/viewer/default.css \
-  && sed -i 's%.*listen \[::\]:8080 default_server;%        listen \[::\]:80 default_server;%g' /etc/nginx/conf.d/default.conf \
-  && sed -i 's%.*listen 8080 default_server;%        listen 80 default_server;%g' /etc/nginx/conf.d/default.conf \
   && sed -i 's%.*root /var/www/html;%        root /var/www/viewer;%g' /etc/nginx/conf.d/default.conf \
   && sed -i 's/.*index index.php index.html;/        index dmarcts-report-viewer.php;/g' /etc/nginx/conf.d/default.conf \
   && sed -i 's%files = /etc/supervisor.d/\*.ini%files = /etc/supervisor/conf.d/*.conf%g' /etc/supervisord.conf \
@@ -93,8 +91,8 @@ RUN set -x \
 RUN chown -R nobody.nobody /var/www /var/lib/nginx /var/log/nginx \
   && chmod 755 /var/lib/nginx
 
-HEALTHCHECK --interval=1m --timeout=3s CMD curl --silent --fail http://127.0.0.1:80/fpm-ping
+HEALTHCHECK --interval=1m --timeout=3s CMD curl --silent --fail http://127.0.0.1:8080/fpm-ping
 
-EXPOSE 80
+EXPOSE 8080
 
 CMD ["/bin/bash", "/entrypoint.sh"]
